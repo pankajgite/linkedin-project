@@ -1,0 +1,31 @@
+spring.application.name: APIGateway
+
+
+server.port: 8080
+eureka.client.service-url.defaultZone: http://localhost:8761/eureka
+
+spring:
+    cloud:
+        gateway:
+            routes:
+                - id: userService
+                  uri: lb://USERSERVICE
+                  predicates:
+                      - Path=/api/v1/users/**
+                  filters:
+                      - StripPrefix=2
+
+
+                - id: postService
+                  uri: lb://POSTSERVICE
+                  predicates:
+                      - Path=/api/v1/posts/**
+                  filters:
+                      - StripPrefix=2
+
+                - id: ConnectionsService
+                  uri: lb://CONNECTIONSERVICE
+                  predicates:
+                      - Path=/api/v1/connections/**
+                  filters:
+                      - StripPrefix=2
