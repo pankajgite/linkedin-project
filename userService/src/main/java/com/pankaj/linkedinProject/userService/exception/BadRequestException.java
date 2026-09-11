@@ -1,7 +1,0 @@
-package com.pankaj.linkedinProject.userService.exception;
-
-public class BadRequestException extends RuntimeException {
-    public BadRequestException(String message) {
-        super(message);
-    }
-}
