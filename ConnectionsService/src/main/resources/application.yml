@@ -8,3 +8,6 @@ spring:
       properties:
         spring.json:
           trusted.packages: com.codingshuttle.linkedInProject.*
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer

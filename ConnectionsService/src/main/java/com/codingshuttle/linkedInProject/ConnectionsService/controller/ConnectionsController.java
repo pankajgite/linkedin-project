@@ -25,8 +25,8 @@ public class ConnectionsController {
     }
 
     @PostMapping("/request/{userId}")
-    public ResponseEntity<Void> sendConnectionRequest(@PathVariable Long userId) {
-        connectionsService.sendConnectionRequest(userId);
+    public ResponseEntity<Void> sendConnectionRequest(@PathVariable Long userId, @RequestBody String message) {
+        connectionsService.sendConnectionRequest(userId,message);
         return ResponseEntity.noContent().build();
     }
 

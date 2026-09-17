@@ -2,10 +2,13 @@ package com.codingshuttle.linkedInProject.ConnectionsService.service;
 
 import com.codingshuttle.linkedInProject.ConnectionsService.auth.AuthContextHolder;
 import com.codingshuttle.linkedInProject.ConnectionsService.entity.Person;
+import com.codingshuttle.linkedInProject.ConnectionsService.event.UserAcceptConnectionEvent;
+import com.codingshuttle.linkedInProject.ConnectionsService.event.UserRequestedEvent;
 import com.codingshuttle.linkedInProject.ConnectionsService.repository.PersonRepository;
 import jakarta.ws.rs.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,6 +19,9 @@ import java.util.List;
 public class ConnectionsService {
 
     private final PersonRepository personRepository;
+    private final KafkaTemplate<Long, UserRequestedEvent>  kafkaTemplate;
+    private final KafkaTemplate<Long, UserAcceptConnectionEvent>  kafkaTemplate1;
+
 
     public List<Person> getFirstDegreeConnectionsOfUser(Long userId) {
         log.info("Getting first degree connections of user with ID: {}", userId);
@@ -28,7 +34,7 @@ public class ConnectionsService {
         return personRepository.getAllRequest(userId);
     }
 
-    public void sendConnectionRequest(Long receiverId) {
+    public void sendConnectionRequest(Long receiverId, String message) {
         Long senderId = AuthContextHolder.getCurrentUserId();
         log.info("sending connection request with senderId: {}, receiverId: {}", senderId, receiverId);
 
@@ -47,6 +53,13 @@ public class ConnectionsService {
         }
 
         personRepository.addConnectionRequest(senderId, receiverId);
+        UserRequestedEvent userRequested = UserRequestedEvent
+                .builder()
+                .fromUserId(senderId)
+                .toUserId(receiverId)
+                .message(message)
+                .build();
+        kafkaTemplate.send("request_topic",userRequested);
         log.info("Successfully sent the connection request");
     }
 
@@ -69,7 +82,12 @@ public class ConnectionsService {
         }
 
         personRepository.acceptConnectionRequest(senderId, receiverId);
-
+        UserAcceptConnectionEvent acceptedConnection = UserAcceptConnectionEvent
+                .builder()
+                .actionUserId(receiverId)
+                .onActionUserId(senderId)
+                .build();
+        kafkaTemplate1.send("connection_accepted_topic",acceptedConnection);
         log.info("Successfully accepted the connection request with senderId: {}, receiverId: {}", senderId,
                 receiverId);
 
